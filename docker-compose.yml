@@ -1,0 +1,26 @@
+services:
+  oracle-database:
+    image: container-registry.oracle.com/database/enterprise
+    ports:
+      - 1521:1521
+      - 5500:5500
+    environment:
+      - ORACLE_PWD=Oradoc_db1
+    networks:
+      - batch-network
+    volumes:
+      - oracle-database-data:/opt/oracle/oradata
+      - ./config/oracle/startup-scripts:/docker-entrypoint-initdb.d/startup
+  flyway:
+    image: flyway/flyway
+    command: -url=jdbc:oracle:thin:@//oracle-database:1521/ORCLPDB1 -schemas=BATCH_USER -user="SYS AS SYSDBA" -password=Oradoc_db1 -connectRetries=300 migrate
+    depends_on:
+      - oracle-database
+    networks:
+      - batch-network
+    volumes:
+      - ./config/flyway/sql:/flyway/sql
+networks:
+  batch-network:
+volumes:
+  oracle-database-data:
